@@ -21,7 +21,7 @@ jobs:
               --cloud-type=t2.micro \
               --labels=cml-runner \
               --single
-train-and-report:
+  train-and-report:
     runs-on: [self-hosted, cml-runner]
     needs: launch-runner
     timeout-minutes: 20
