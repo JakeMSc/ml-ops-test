@@ -41,6 +41,6 @@ jobs:
           cml pr model/random_forest.joblib
 
           # Create CML report
-          cat metrics.txt >> report.md
-          echo '![](./confusion_matrix.png "Confusion Matrix")' >> report.md
+          cat model/metrics.txt >> report.md
+          echo '![](./model/confusion_matrix.png "Confusion Matrix")' >> report.md
           cml comment update report.md
