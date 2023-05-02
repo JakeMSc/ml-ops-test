@@ -4,7 +4,7 @@ on: # Here we use two triggers: manually and daily at 08:00
   schedule:
     - cron: '0 8 * * *'
 jobs:
-  deploy-runner:
+  launch-runner:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
