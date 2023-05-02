@@ -7,7 +7,7 @@ jobs:
   deploy-runner:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: iterative/setup-cml@v1
       - name: Deploy runner on EC2
         env:
@@ -21,20 +21,14 @@ jobs:
               --cloud-type=t2.micro \
               --labels=cml-runner \
               --single
-  train-model:
-    needs: deploy-runner
+train-and-report:
     runs-on: [self-hosted, cml-runner]
+    needs: launch-runner
     timeout-minutes: 20
+    container: docker://iterativeai/cml:0-dvc2-base1
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: '3.x'
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '16'
-      - uses: iterative/setup-cml@v1
-      - name: Train model
+      - uses: actions/checkout@v3
+      - name: Train and Report
         env:
           REPO_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
@@ -47,6 +41,6 @@ jobs:
           cml pr model/random_forest.joblib
 
           # Create CML report
-          cat model/metrics.txt > report.md
-          cml publish model/confusion_matrix.png --md >> report.md
-          cml send-comment --pr --update report.md
+          cat metrics.txt >> report.md
+          echo '![](./confusion_matrix.png "Confusion Matrix")' >> report.md
+          cml comment update report.md
