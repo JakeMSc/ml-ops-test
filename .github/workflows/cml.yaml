@@ -24,7 +24,7 @@ jobs:
   train-model:
     needs: deploy-runner
     runs-on: [self-hosted, cml-runner]
-    timeout-minutes: 120 # 2h
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
