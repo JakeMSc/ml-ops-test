@@ -12,7 +12,7 @@ This repository contains the following files:
 
 ## How to install and run
 Clone this repository.
-Run `python3 -m venv venv`
-Run `pip install -r requirements.txt`
-Run `dvc init`
-Run `aws configure`
+- Run `python3 -m venv venv`
+- Run `pip install -r requirements.txt`
+- Run `dvc init`
+- Run `aws configure`
