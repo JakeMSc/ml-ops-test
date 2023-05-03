@@ -32,5 +32,8 @@ stages:
       size: 1875
     outs:
     - path: metrics.json
-      md5: e5886fe39f8cdf6810f51826943a1854
+      md5: e18346644f9440009d425a8038dbffde
       size: 18
+    - path: model.joblib
+      md5: c1fc1cb2798a9b10ec2ac9f1151bb012
+      size: 1383
