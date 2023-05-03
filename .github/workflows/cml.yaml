@@ -1,8 +1,6 @@
 name: CML
 on: # Here we use two triggers: manually and daily at 08:00
   workflow_dispatch:
-  schedule:
-    - cron: '0 8 * * *'
 jobs:
   launch-runner:
     runs-on: ubuntu-latest
@@ -37,10 +35,20 @@ jobs:
           python get_data.py
           python train.py
 
-          # Create pull request
-          cml pr model/random_forest.joblib
+          # Commit the model file
+          git add model/random_forest.joblib
+          git commit -m "Add trained model"
 
           # Create CML report
           cat model/metrics.txt >> report.md
           echo '![](./model/confusion_matrix.png "Confusion Matrix")' >> report.md
+          
+          # Commit the report file
+          git add report.md
+          git commit -m "Add CML report"
+
+          # Push the changes to the current branch
+          git push origin HEAD
+
+          # Add CML comment with the report
           cml comment update report.md
