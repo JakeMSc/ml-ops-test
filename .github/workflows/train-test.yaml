@@ -34,12 +34,10 @@ jobs:
           pip install -r requirements.txt
           
           dvc repro
-
-          dvc add model.joblib
           dvc push
 
           # Commit the model DVC file
-          git add model.joblib.dvc
+          git add dvc.lock
           git commit -m "Add trained model"
 
           # Fetch metrics from main branch
