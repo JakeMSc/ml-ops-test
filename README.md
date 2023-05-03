@@ -1,4 +1,4 @@
-# Training and saving models with CML ans DVC on a dedicated AWS EC2 runner
+# Training and saving models with CML and DVC on a dedicated AWS EC2 runner
 
 The files in this repository provide an example on how to use a dedicated runner on AWS to train and export a machine learning model using CML, DVC and GitHub actions.
 
