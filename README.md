@@ -11,4 +11,8 @@ This repository contains the following files:
 - `.github/workflows/train-test.yaml`: example workflow that provisions an AWS EC2 instance to run `train.py` and export the resulting model to a DVC repo.
 
 ## How to install and run
-Clone this repository and follow the instructions in [this blog post](). Specifically, make sure satisfy the prerequisites with regards to the AWS and GitHub Workflows set-up.
+Clone this repository.
+Run `python3 -m venv venv`
+Run `pip install -r requirements.txt`
+Run `dvc init`
+Run `aws configure`
