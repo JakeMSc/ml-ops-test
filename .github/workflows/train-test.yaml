@@ -1,4 +1,4 @@
-name: CML
+name: Train and test
 on: # Here we use two triggers: manually and daily at 08:00
   workflow_dispatch:
 jobs:
@@ -35,17 +35,16 @@ jobs:
           python get_data.py
           python train.py
 
-          # Commit the model file
-          git add model/random_forest.joblib
+          dvc add model/random_forest.joblib
+          dvc push
+
+          # Commit the model DVC file
+          git add model/random_forest.joblib.dvc
           git commit -m "Add trained model"
 
           # Create CML report
           cat model/metrics.txt >> report.md
           echo '![](./model/confusion_matrix.png "Confusion Matrix")' >> report.md
-          
-          # Commit the report file
-          git add report.md
-          git commit -m "Add CML report"
 
           # Push the changes to the current branch
           git push origin HEAD
