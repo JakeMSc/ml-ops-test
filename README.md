@@ -12,8 +12,3 @@ This repository contains the following files:
 
 ## How to install and run
 Clone this repository and follow the instructions in [this blog post](). Specifically, make sure satisfy the prerequisites with regards to the AWS and GitHub Workflows set-up.
-
-## Need help? Or want to contribute?
-If you need any help in following this guide you can [drop us a message in Discord](https://dvc.org/chat). In case you run into any issues that need fixing, don't hesitate to open an issue in this repository and/or submit a fix in a pull request.
-# ml-ops-test
-# ml-ops-test
