@@ -1,4 +1,4 @@
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.naive_bayes import GaussianNB
 from sklearn.metrics import ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
 import json
@@ -14,17 +14,12 @@ y_test = np.genfromtxt("data/test_labels.csv")
 
 
 # Fit a model
-depth = 2
-clf = RandomForestClassifier(max_depth=depth)
+clf = GaussianNB()
 clf.fit(X_train,y_train)
 
 # Calculate accuracy
 acc = clf.score(X_test, y_test)
 print(acc)
-
-# Create model folder if it does not yet exist
-if not os.path.exists('model'):
-    os.makedirs('model')
 
 # Write metrics to file
 with open('metrics.json', 'w') as outfile:

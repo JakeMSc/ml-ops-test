@@ -49,6 +49,9 @@ jobs:
           dvc metrics diff main --no-path --md >> report.md
           echo '![](.confusion_matrix.png "Confusion Matrix")' >> report.md
 
+          git add report.md
+          git commit -m 'Add report'
+
           # Push the changes to the current branch
           git push origin HEAD
 
