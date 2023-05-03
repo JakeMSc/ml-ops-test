@@ -32,19 +32,22 @@ jobs:
         run: |
           cml ci
           pip install -r requirements.txt
-          python get_data.py
-          python train.py
+          
+          dvc repro
 
-          dvc add model/random_forest.joblib
+          dvc add model.joblib
           dvc push
 
           # Commit the model DVC file
-          git add model/random_forest.joblib.dvc
+          git add model.joblib.dvc
           git commit -m "Add trained model"
 
-          # Create CML report
-          cat model/metrics.txt >> report.md
-          echo '![](./model/confusion_matrix.png "Confusion Matrix")' >> report.md
+          # Fetch metrics from main branch
+          git fetch --depth=1 origin main:main
+
+          echo "Metrics: workspace vs. main" > report.md
+          dvc metrics diff main --no-path --md >> report.md
+          echo '![](.confusion_matrix.png "Confusion Matrix")' >> report.md
 
           # Push the changes to the current branch
           git push origin HEAD

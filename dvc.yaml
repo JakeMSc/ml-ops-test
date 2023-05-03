@@ -1,0 +1,19 @@
+stages:
+  data:
+    cmd: python get_data.py
+    outs:
+      - data/train_features.csv
+      - data/test_features.csv
+      - data/train_labels.csv
+      - data/test_labels.csv
+
+  train:
+    cmd: python train.py
+    deps:
+      - data/train_features.csv
+      - data/test_features.csv
+      - data/train_labels.csv
+      - data/test_labels.csv
+    metrics:
+      - metrics.json:
+          cache: false

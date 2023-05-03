@@ -27,12 +27,12 @@ if not os.path.exists('model'):
     os.makedirs('model')
 
 # Write metrics to file
-with open("model/metrics.txt", 'w+') as outfile:
-        outfile.write("Accuracy: " + str(acc) + "\n")
+with open('metrics.json', 'w') as outfile:
+    outfile.write(json.dumps({"Accuracy": acc}))
 
 # Plot confusion matrix
 disp = ConfusionMatrixDisplay.from_estimator(clf, X_test, y_test, cmap=plt.cm.Blues)
-plt.savefig('model/confusion_matrix.png')
+plt.savefig('confusion_matrix.png')
 
 # Save the model
-joblib.dump(clf, "model/random_forest.joblib")
+joblib.dump(clf, "model.joblib")
