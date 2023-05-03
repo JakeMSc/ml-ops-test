@@ -7,8 +7,8 @@ This repository contains the following files:
 
 - `requirements.txt`: the packages necessary for training our model.
 - `get_data.py`: script that generates sample data to train a model on.
-- `train.py`: script that trains a random forest on the generated data and exports that model to a binary file, along with a confusion matrix and some metrics.
-- `.github/workflows/cml.yaml`: example workflow that provisions an AWS EC2 instance to run `train.py` and export the resulting model.
+- `train.py`: script that trains a model on the generated data and exports that model to a binary file, along with a confusion matrix and some metrics.
+- `.github/workflows/train-test.yaml`: example workflow that provisions an AWS EC2 instance to run `train.py` and export the resulting model to a DVC repo.
 
 ## How to install and run
 Clone this repository and follow the instructions in [this blog post](). Specifically, make sure satisfy the prerequisites with regards to the AWS and GitHub Workflows set-up.
