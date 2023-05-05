@@ -2,3 +2,4 @@ scikit-learn==1.2.2
 matplotlib==3.7.1
 dvc[s3]==2.56.0
 torch==2.0.0
+black==23.3.0

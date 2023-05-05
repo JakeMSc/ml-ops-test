@@ -221,6 +221,7 @@ def main(args):
         ModelHandler.load_model(model)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
     model = model.to(device)
 
     optimizer = optim.Adam(model.parameters())
