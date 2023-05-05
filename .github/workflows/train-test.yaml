@@ -16,8 +16,10 @@ jobs:
           cml runner \
               --cloud=aws \
               --cloud-region=eu-west \
-              --cloud-type=t2.micro \
-              --labels=cml-runner \
+              --cloud-type=g4dn.xlarge \
+              --labels=cml-gpu
+              --cloud-spot
+              --cloud-spot-price=0.3
               --single
   train-and-report:
     runs-on: [self-hosted, cml-runner]
