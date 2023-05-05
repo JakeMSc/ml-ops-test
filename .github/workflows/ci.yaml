@@ -1,0 +1,44 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: CI Test
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - edited
+      - synchronize
+
+jobs:
+  lint-and-test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout source code
+        uses: actions/checkout@v3.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: wget
+        uses: wei/wget@v1.1.1
+        with:
+          args: -q https://bootstrap.pypa.io/get-pip.py
+
+      - name: Install dependencies
+        run: |
+          python3 get-pip.py
+          python -m pip install --upgrade pip
+          rm -f get-pip.py
+          if [ -f requirements.txt ]; then pip3 install -r requirements.txt; fi
+
+      - name: python formatting check
+        run: |
+          black . --check --diff
+
+      - name: Python isort Order Check
+        id: run_python_isort
+        run: isort . -s "get-pip.py" --check --diff
