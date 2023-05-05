@@ -1,6 +1,5 @@
 import argparse
 import json
-import os
 from io import BytesIO
 
 import dvc.api
@@ -11,9 +10,8 @@ import torch.nn as nn
 import torch.optim as optim
 import yaml
 from sklearn.metrics import ConfusionMatrixDisplay
-from torch.utils.data import DataLoader, Dataset
 from sklearn.model_selection import train_test_split
-
+from torch.utils.data import DataLoader, Dataset
 
 from interruptions import EC2Interruption, detect_ec2_interruption, touch_empty_file
 
@@ -60,26 +58,56 @@ class EarlyStopper:
         return False
 
 
-def train(model, x, y, optimizer, criterion):
-    model.train()
-    y_pred = model(x)
-    loss = criterion(y_pred, y)
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
+class Trainer:
+    def __init__(self, model, train_loader, optimizer, criterion, device):
+        self.model = model
+        self.train_loader = train_loader
+        self.optimizer = optimizer
+        self.criterion = criterion
+        self.device = device
+
+    def train(self):
+        self.model.train()
+        for x_batch, y_batch in self.train_loader:
+            if detect_ec2_interruption():
+                raise EC2Interruption()
+
+            x_batch, y_batch = x_batch.to(self.device), y_batch.to(self.device)
+            y_pred = self.model(x_batch)
+            loss = self.criterion(y_pred, y_batch)
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
+
+    def validate(self, val_dataset):
+        val_loader = DataLoader(val_dataset, batch_size=512, shuffle=False)
+        total_loss = 0.0
+        total_samples = 0
+
+        self.model.eval()
+        with torch.no_grad():
+            for x_batch, y_batch in val_loader:
+                x_batch, y_batch = x_batch.to(self.device), y_batch.to(self.device)
+                y_pred = self.model(x_batch)
+                loss = self.criterion(y_pred, y_batch)
+                total_loss += loss.item() * y_batch.size(0)
+                total_samples += y_batch.size(0)
+
+        return total_loss / total_samples
 
 
-def predict(model, x):
-    model.eval()
-    with torch.no_grad():
-        y_pred = model(x)
-    return y_pred
+class ModelHandler:
+    @staticmethod
+    def save_model(model, filename="model.pt"):
+        torch.save(model.state_dict(), filename)
 
+    @staticmethod
+    def load_model(model):
+        with dvc.api.open("model.pt", mode="rb") as model_file:
+            model_buffer = BytesIO(model_file.read())
 
-def get_metrics(y, y_pred_label):
-    metrics = {}
-    metrics["acc"] = (y_pred_label == y).sum().item() / len(y)
-    return metrics
+        state_dict = torch.load(model_buffer)
+        model.load_state_dict(state_dict)
 
 
 def evaluate(model, test_dataset):
@@ -103,22 +131,6 @@ def evaluate(model, test_dataset):
 
     accuracy = total_correct / total_samples
     return {"acc": accuracy}, all_y_true, all_y_pred
-
-
-def validate(model, val_dataset, criterion):
-    val_loader = DataLoader(val_dataset, batch_size=512, shuffle=False)
-    total_loss = 0.0
-    total_samples = 0
-
-    model.eval()
-    with torch.no_grad():
-        for x_batch, y_batch in val_loader:
-            y_pred = model(x_batch)
-            loss = criterion(y_pred, y_batch)
-            total_loss += loss.item() * y_batch.size(0)
-            total_samples += y_batch.size(0)
-
-    return total_loss / total_samples
 
 
 def save_confusion_matrix(y_true, y_pred, filename="confusion_matrix.png"):
@@ -178,14 +190,7 @@ def main(args):
         print(
             f"Resuming training. Downloading checkpoint from epoch {args.starting_epoch}"
         )
-        # Use DVC API to open and read the model file
-        with dvc.api.open("model.pt", mode="rb") as model_file:
-            model_buffer = BytesIO(model_file.read())
-
-        # Load the state_dict using PyTorch
-        state_dict = torch.load(model_buffer)
-        # Load the state_dict into the model
-        model.load_state_dict(state_dict)
+        ModelHandler.load_model(model)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
@@ -202,15 +207,13 @@ def main(args):
     # Instantiate EarlyStopper with the desired patience and min_delta
     early_stopper = EarlyStopper(patience=3, min_delta=0.001)
 
+    trainer = Trainer(model, train_loader, optimizer, criterion, device)
+
     for epoch in range(args.starting_epoch, args.epochs + 1):
         try:
-            for x_batch, y_batch in train_loader:
-                if detect_ec2_interruption():
-                    raise EC2Interruption()
+            trainer.train()
 
-                train(model, x_batch, y_batch, optimizer, criterion)
-
-            val_loss = validate(model, val_dataset, criterion)
+            val_loss = trainer.validate(val_dataset)
             print(f"Epoch {epoch}, Validation Loss: {val_loss}")
 
             if early_stopper.early_stop(val_loss):
@@ -222,7 +225,7 @@ def main(args):
             touch_empty_file("interrupted")
             break
 
-    torch.save(model.state_dict(), "model.pt")
+    ModelHandler.save_model(model)
     metrics, y_true, y_pred = evaluate(model, test_dataset)
     update_params_yaml(epoch)
     save_metrics(metrics)
