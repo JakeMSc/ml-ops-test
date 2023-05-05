@@ -1,3 +1,3 @@
 batch_size: 4
-epochs: 5
-starting_epoch: 3
+epochs: 100
+starting_epoch: 0

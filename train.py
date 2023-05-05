@@ -13,7 +13,13 @@ from sklearn.metrics import ConfusionMatrixDisplay
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Dataset
 
-from interruptions import EC2Interruption, detect_ec2_interruption, touch_empty_file
+from interruptions import (
+    EC2Interruption,
+    detect_ec2_interruption,
+    is_spot_instance_terminating,
+    remove_interrupted_file,
+    touch_empty_file,
+)
 
 
 class TabularDataset(Dataset):
@@ -51,10 +57,12 @@ class EarlyStopper:
         if validation_loss < self.min_validation_loss:
             self.min_validation_loss = validation_loss
             self.counter = 0
-        elif validation_loss > (self.min_validation_loss + self.min_delta):
+        elif validation_loss >= (self.min_validation_loss + self.min_delta):
             self.counter += 1
             if self.counter >= self.patience:
                 return True
+        else:
+            self.counter = 0
         return False
 
 
@@ -68,8 +76,11 @@ class Trainer:
 
     def train(self):
         self.model.train()
+        total_loss = 0.0
+        total_samples = 0
+
         for x_batch, y_batch in self.train_loader:
-            if detect_ec2_interruption():
+            if is_spot_instance_terminating():
                 raise EC2Interruption()
 
             x_batch, y_batch = x_batch.to(self.device), y_batch.to(self.device)
@@ -78,6 +89,11 @@ class Trainer:
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
+
+            total_loss += loss.item() * y_batch.size(0)
+            total_samples += y_batch.size(0)
+
+        return total_loss / total_samples
 
     def validate(self, val_dataset):
         val_loader = DataLoader(val_dataset, batch_size=512, shuffle=False)
@@ -143,6 +159,16 @@ def save_metrics(metrics):
         outfile.write(json.dumps(metrics))
 
 
+def save_loss_plot(train_losses, val_losses, filename="loss.png"):
+    plt.plot(train_losses, label="Training Loss")
+    plt.plot(val_losses, label="Validation Loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.savefig(filename)
+    plt.close()
+
+
 def update_params_yaml(starting_epoch):
     with open("params.yaml", "r") as file:
         params = yaml.safe_load(file)
@@ -167,6 +193,8 @@ def load_data(features_file, labels_file):
 
 def main(args):
     torch.manual_seed(0)
+
+    training_interrupted = False
 
     x_train, y_train = load_data("data/train_features.csv", "data/train_labels.csv")
     x_test, y_test = load_data("data/test_features.csv", "data/test_labels.csv")
@@ -205,16 +233,23 @@ def main(args):
     )
 
     # Instantiate EarlyStopper with the desired patience and min_delta
-    early_stopper = EarlyStopper(patience=3, min_delta=0.001)
+    early_stopper = EarlyStopper(patience=1, min_delta=0)
 
     trainer = Trainer(model, train_loader, optimizer, criterion, device)
 
+    train_losses = []
+    val_losses = []
+
     for epoch in range(args.starting_epoch, args.epochs + 1):
         try:
-            trainer.train()
+            train_loss = trainer.train()
+            train_losses.append(train_loss)
 
             val_loss = trainer.validate(val_dataset)
-            print(f"Epoch {epoch}, Validation Loss: {val_loss}")
+            val_losses.append(val_loss)
+            print(
+                f"Epoch {epoch}, Training Loss: {train_loss}, Validation Loss: {val_loss}"
+            )
 
             if early_stopper.early_stop(val_loss):
                 print(f"Early stopping at epoch {epoch}")
@@ -222,13 +257,18 @@ def main(args):
 
         except EC2Interruption:
             print(f"EC2 interrupted, saving model at epoch {epoch}")
+            training_interrupted = True
             touch_empty_file("interrupted")
             break
+
+    if not training_interrupted:
+        remove_interrupted_file()
 
     ModelHandler.save_model(model)
     metrics, y_true, y_pred = evaluate(model, test_dataset)
     update_params_yaml(epoch)
     save_metrics(metrics)
+    save_loss_plot(train_losses, val_losses)
     save_confusion_matrix(y_true, y_pred)
 
 

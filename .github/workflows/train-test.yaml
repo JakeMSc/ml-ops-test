@@ -54,6 +54,7 @@ jobs:
           echo "Metrics: workspace vs. main" >> report.md
           dvc metrics diff main --no-path --md >> report.md
           echo '![](./confusion_matrix.png "Confusion Matrix")' >> report.md
+          echo '![](./loss.png "Confusion Matrix")' >> report.md
 
           git add report.md metrics.json confusion_matrix.png
           git commit -m 'Add report'
