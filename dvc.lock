@@ -1,0 +1,44 @@
+schema: '2.0'
+stages:
+  data:
+    cmd: python get_data.py
+    outs:
+    - path: data/test_features.csv
+      md5: a15195974221bf1b64489612830980c4
+      size: 12727
+    - path: data/test_labels.csv
+      md5: 49b3345a33463f30c0f86c9c39f99b15
+      size: 625
+    - path: data/train_features.csv
+      md5: bc518f874ce1fd971ea51bc96f73cbd4
+      size: 38245
+    - path: data/train_labels.csv
+      md5: 8f1425951d500fe07e655244492b1528
+      size: 1875
+  train:
+    cmd: python train.py --epochs 100 --starting_epoch 54 --batch_size 4
+    deps:
+    - path: data/test_features.csv
+      md5: a15195974221bf1b64489612830980c4
+      size: 12727
+    - path: data/test_labels.csv
+      md5: 49b3345a33463f30c0f86c9c39f99b15
+      size: 625
+    - path: data/train_features.csv
+      md5: bc518f874ce1fd971ea51bc96f73cbd4
+      size: 38245
+    - path: data/train_labels.csv
+      md5: 8f1425951d500fe07e655244492b1528
+      size: 1875
+    params:
+      params.yaml:
+        batch_size: 4
+        epochs: 100
+        starting_epoch: 73
+    outs:
+    - path: metrics.json
+      md5: a793ef5d0fc38073f47fe89cf16e7899
+      size: 13
+    - path: model.pt
+      md5: 9094646b3f419f10762a9311cf8ee8c2
+      size: 2899
