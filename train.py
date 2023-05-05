@@ -13,9 +13,13 @@ from sklearn.metrics import ConfusionMatrixDisplay
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Dataset
 
-from interruptions import (EC2Interruption, detect_ec2_interruption,
-                           is_spot_instance_terminating,
-                           remove_interrupted_file, touch_empty_file)
+from interruptions import (
+    EC2Interruption,
+    detect_ec2_interruption,
+    is_spot_instance_terminating,
+    remove_interrupted_file,
+    touch_empty_file,
+)
 
 
 class TabularDataset(Dataset):
