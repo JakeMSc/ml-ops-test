@@ -1,5 +1,5 @@
 name: Train and test
-on: # Here we use two triggers: manually and daily at 08:00
+on:
   workflow_dispatch:
 jobs:
   launch-runner:
@@ -36,18 +36,25 @@ jobs:
           pip install -r requirements.txt
           
           dvc repro
+
           dvc push
 
           # Commit the model DVC file
-          git add dvc.lock
-          git commit -m "Add trained model"
+          git add dvc.lock params.yaml
+          git commit -m "Add pipeline state"
 
           # Fetch metrics from main branch
           git fetch --depth=1 origin main:main
 
-          echo "Metrics: workspace vs. main" > report.md
+          # Check for the interrupted file and add a line to the report if found
+          if [ -f interrupted ]; then
+            echo 'Training interrupted. Consider resuming training by triggering the workflow again.' >> report.md
+          fi
+
+          echo "Metrics: workspace vs. main" >> report.md
           dvc metrics diff main --no-path --md >> report.md
           echo '![](./confusion_matrix.png "Confusion Matrix")' >> report.md
+          echo '![](./loss.png "Confusion Matrix")' >> report.md
 
           git add report.md metrics.json confusion_matrix.png
           git commit -m 'Add report'
