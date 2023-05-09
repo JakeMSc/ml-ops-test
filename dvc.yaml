@@ -8,14 +8,22 @@ stages:
       - data/test_labels.csv
 
   train:
-    cmd: python train.py
+    cmd: >-
+      python train.py
+      --epochs ${epochs}
+      --starting_epoch ${starting_epoch}
+      --batch_size ${batch_size}
+    params:
+      - epochs
+      - starting_epoch
+      - batch_size
     deps:
       - data/train_features.csv
       - data/test_features.csv
       - data/train_labels.csv
       - data/test_labels.csv
     outs:
-      - model.joblib
+      - model.pt
     metrics:
       - metrics.json:
           cache: false

@@ -16,7 +16,7 @@ stages:
       md5: 8f1425951d500fe07e655244492b1528
       size: 1875
   train:
-    cmd: python train.py
+    cmd: python train.py --epochs 100 --starting_epoch 54 --batch_size 4
     deps:
     - path: data/test_features.csv
       md5: a15195974221bf1b64489612830980c4
@@ -30,10 +30,15 @@ stages:
     - path: data/train_labels.csv
       md5: 8f1425951d500fe07e655244492b1528
       size: 1875
+    params:
+      params.yaml:
+        batch_size: 4
+        epochs: 100
+        starting_epoch: 73
     outs:
     - path: metrics.json
-      md5: e18346644f9440009d425a8038dbffde
-      size: 18
-    - path: model.joblib
-      md5: c1fc1cb2798a9b10ec2ac9f1151bb012
-      size: 1383
+      md5: a793ef5d0fc38073f47fe89cf16e7899
+      size: 13
+    - path: model.pt
+      md5: 9094646b3f419f10762a9311cf8ee8c2
+      size: 2899
